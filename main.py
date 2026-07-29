@@ -1,5 +1,7 @@
 # main.py
 
+from app.routes.users import router as users_router
+from app.routes.calculations import router as calculations_router
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -14,6 +16,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+app.include_router(users_router)
+app.include_router(calculations_router)
 
 # Setup templates directory
 templates = Jinja2Templates(directory="templates")

@@ -1,6 +1,12 @@
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    model_validator,
+)
 
 
 class CalculationType(str, Enum):
@@ -11,7 +17,15 @@ class CalculationType(str, Enum):
 
 
 class UserCreate(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
+    username: str = Field(
+        min_length=3,
+        max_length=50,
+    )
+    email: EmailStr
+    password: str = Field(min_length=8)
+
+
+class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
 
@@ -32,8 +46,29 @@ class CalculationCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_division(self):
-        if self.type == CalculationType.DIVIDE and self.b == 0:
+        if (
+            self.type == CalculationType.DIVIDE
+            and self.b == 0
+        ):
             raise ValueError("Cannot divide by zero")
+
+        return self
+
+
+class CalculationUpdate(BaseModel):
+    a: float
+    b: float
+    type: CalculationType
+    user_id: int | None = None
+
+    @model_validator(mode="after")
+    def validate_division(self):
+        if (
+            self.type == CalculationType.DIVIDE
+            and self.b == 0
+        ):
+            raise ValueError("Cannot divide by zero")
+
         return self
 
 
