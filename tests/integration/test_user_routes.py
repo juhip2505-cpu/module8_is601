@@ -36,9 +36,7 @@ def test_register_user_saves_hashed_password(
 
     assert response.status_code == 201
 
-    from tests.integration.conftest import (
-        TestingSessionLocal,
-    )
+    from tests.conftest import TestingSessionLocal
 
     db = TestingSessionLocal()
 

@@ -37,6 +37,10 @@ class UserRead(BaseModel):
     username: str
     email: EmailStr
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
 
 class CalculationCreate(BaseModel):
     a: float

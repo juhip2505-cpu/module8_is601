@@ -9,10 +9,6 @@ from playwright.sync_api import sync_playwright
 
 @pytest.fixture(scope="session")
 def fastapi_server(tmp_path_factory):
-    """
-    Start FastAPI with a temporary test database
-    before E2E tests and stop it afterward.
-    """
     test_directory = tmp_path_factory.mktemp(
         "e2e_database"
     )
@@ -20,12 +16,10 @@ def fastapi_server(tmp_path_factory):
     test_database = test_directory / "e2e_test.db"
 
     environment = os.environ.copy()
-
     environment["DATABASE_URL"] = (
         f"sqlite:///{test_database}"
     )
 
-    # Create database tables before starting FastAPI.
     init_process = subprocess.run(
         ["python", "-m", "app.init_db"],
         env=environment,
@@ -39,7 +33,6 @@ def fastapi_server(tmp_path_factory):
             + init_process.stderr
         )
 
-    # Start the FastAPI application.
     fastapi_process = subprocess.Popen(
         ["python", "main.py"],
         env=environment,
@@ -63,15 +56,12 @@ def fastapi_server(tmp_path_factory):
                     "FastAPI server is up and running."
                 )
                 break
-
         except requests.exceptions.RequestException:
             pass
 
         time.sleep(1)
-
     else:
         fastapi_process.terminate()
-
         raise RuntimeError(
             "FastAPI server failed to start "
             "within 30 seconds."
@@ -80,27 +70,19 @@ def fastapi_server(tmp_path_factory):
     yield
 
     print("Shutting down FastAPI server...")
-
     fastapi_process.terminate()
     fastapi_process.wait()
-
     print("FastAPI server has been terminated.")
 
 
 @pytest.fixture(scope="session")
 def playwright_instance_fixture():
-    """
-    Manage Playwright's lifecycle.
-    """
     with sync_playwright() as playwright:
         yield playwright
 
 
 @pytest.fixture(scope="session")
 def browser(playwright_instance_fixture):
-    """
-    Launch one browser for the E2E test session.
-    """
     browser_instance = (
         playwright_instance_fixture.chromium.launch(
             headless=True
@@ -108,17 +90,12 @@ def browser(playwright_instance_fixture):
     )
 
     yield browser_instance
-
     browser_instance.close()
 
 
 @pytest.fixture
 def page(browser):
-    """
-    Create a fresh browser page for each test.
-    """
     browser_page = browser.new_page()
 
     yield browser_page
-
     browser_page.close()

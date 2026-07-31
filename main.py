@@ -1,9 +1,12 @@
 # main.py
 
+from app.database import Base, engine
 from app.routes.users import router as users_router
 from app.routes.calculations import router as calculations_router
+from app.routes.auth import router as auth_router
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, field_validator  # Use @validator for Pydantic 1.x
 from fastapi.exceptions import RequestValidationError
@@ -15,9 +18,33 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 app.include_router(users_router)
 app.include_router(calculations_router)
+app.include_router(auth_router)
+
+@app.get(
+    "/register-page",
+    response_class=HTMLResponse,
+)
+def register_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="register.html",
+    )
+
+
+@app.get(
+    "/login-page",
+    response_class=HTMLResponse,
+)
+def login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+    )
 
 # Setup templates directory
 templates = Jinja2Templates(directory="templates")
