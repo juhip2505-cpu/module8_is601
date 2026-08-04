@@ -1,13 +1,16 @@
-# Module 11 - FastAPI Calculator
+# Module 13 - JWT Authentication FastAPI Calculator
 
 ## Description
 
 This project is a FastAPI Calculator application that demonstrates:
 
+- JWT Authentication
+- User Registration and Login
+- Password Hashing
 - SQLAlchemy database models
 - Pydantic data validation
-- Factory Pattern
-- Unit, Integration, and End-to-End testing
+- Protected API endpoints
+- Unit, Integration, and End-to-End (Playwright) testing
 - GitHub Actions CI/CD
 - Docker deployment
 
@@ -27,10 +30,26 @@ Run the application:
 uvicorn main:app --reload
 ```
 
-Open:
+Open the application:
 
 ```
 http://127.0.0.1:8000
+```
+
+---
+
+## Authentication Pages
+
+Registration:
+
+```
+http://127.0.0.1:8000/register-page
+```
+
+Login:
+
+```
+http://127.0.0.1:8000/login-page
 ```
 
 ---
@@ -40,25 +59,25 @@ http://127.0.0.1:8000
 Run all tests:
 
 ```bash
-python -m pytest -v
+pytest
 ```
 
 Run unit tests:
 
 ```bash
-python -m pytest tests/unit -v
+pytest tests/unit -v
 ```
 
 Run integration tests:
 
 ```bash
-python -m pytest tests/integration -v
+pytest tests/integration -v
 ```
 
-Run end-to-end tests:
+Run Playwright end-to-end tests:
 
 ```bash
-python -m pytest tests/e2e -v
+pytest tests/e2e -v
 ```
 
 ---
