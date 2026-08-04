@@ -1,5 +1,6 @@
 # tests/e2e/test_e2e.py
 
+import uuid
 import pytest  # Import the pytest framework for writing and running tests
 from playwright.sync_api import expect
 
@@ -78,3 +79,64 @@ def test_calculator_divide_by_zero(page, fastapi_server):
     "Error: Cannot divide by zero!",
     timeout=5000,
 )
+
+@pytest.mark.e2e
+def test_user_registration(page, fastapi_server):
+    """
+    Test successful user registration through the frontend form.
+    """
+    unique_id = uuid.uuid4().hex[:8]
+
+    username = f"playwrightuser{unique_id}"
+    email = f"playwright_{unique_id}@example.com"
+
+    page.goto("http://localhost:8000/register-page")
+
+    page.fill("#username", username)
+    page.fill("#email", email)
+    page.fill("#password", "Password123")
+    page.fill("#confirm-password", "Password123")
+
+    page.click('button:text("Register")')
+
+    expect(page.locator("#message")).to_have_text(
+        "Registration successful!",
+        timeout=5000,
+    )
+
+@pytest.mark.e2e
+def test_user_login(page, fastapi_server):
+    """
+    Test successful user login through the frontend form.
+    """
+    unique_id = uuid.uuid4().hex[:8]
+
+    username = f"loginuser{unique_id}"
+    email = f"login_{unique_id}@example.com"
+    password = "Password123"
+
+    page.goto("http://localhost:8000/register-page")
+
+    page.fill("#username", username)
+    page.fill("#email", email)
+    page.fill("#password", password)
+    page.fill("#confirm-password", password)
+
+    page.click('button:text("Register")')
+
+    expect(page.locator("#message")).to_have_text(
+        "Registration successful!",
+        timeout=5000,
+    )
+
+    page.goto("http://localhost:8000/login-page")
+
+    page.fill("#email", email)
+    page.fill("#password", password)
+
+    page.click('button:text("Login")')
+
+    expect(page.locator("#message")).to_have_text(
+        "Login successful!",
+        timeout=5000,
+    )

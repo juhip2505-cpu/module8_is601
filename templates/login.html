@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Login</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            box-sizing: border-box;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #message {
+            margin-top: 16px;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .error {
+            color: #b00020;
+        }
+
+        .success {
+            color: #067d2f;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <h1>Login</h1>
+
+        <form id="login-form">
+
+            <label for="email">Email</label>
+            <input
+                id="email"
+                type="email"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                type="password"
+                required
+                minlength="8"
+            >
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+        <div class="link">
+            Don't have an account?
+            <a href="/register-page">Register</a>
+        </div>
+
+    </main>
+
+    <script>
+        const form = document.getElementById("login-form");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+            message.textContent = "";
+            message.className = "";
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+            try {
+
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    message.textContent =
+                        data.error ||
+                        data.detail ||
+                        "Login failed.";
+                    message.className = "error";
+                    return;
+                }
+
+                localStorage.setItem(
+                    "access_token",
+                    data.access_token
+                );
+
+                message.textContent =
+                    "Login successful!";
+                message.className = "success";
+
+                form.reset();
+
+            } catch (error) {
+
+                message.textContent =
+                    "Unable to connect to the server.";
+
+                message.className = "error";
+            }
+
+        });
+    </script>
+
+</body>
+</html>
