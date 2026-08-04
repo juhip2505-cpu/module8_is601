@@ -140,3 +140,97 @@ def test_user_login(page, fastapi_server):
         "Login successful!",
         timeout=5000,
     )
+
+
+@pytest.mark.e2e
+def test_registration_rejects_short_password(
+    page,
+    fastapi_server,
+):
+    """
+    Test that registration rejects a password
+    shorter than eight characters.
+    """
+    unique_id = uuid.uuid4().hex[:8]
+
+    page.goto(
+        "http://localhost:8000/register-page"
+    )
+
+    page.fill(
+        "#username",
+        f"shortpass{unique_id}",
+    )
+
+    page.fill(
+        "#email",
+        f"shortpass_{unique_id}@example.com",
+    )
+
+    page.fill(
+        "#password",
+        "short",
+    )
+
+    page.fill(
+        "#confirm-password",
+        "short",
+    )
+
+    page.click('button:text("Register")')
+
+    expect(
+        page.locator("#message")
+    ).to_have_text(
+        "Password must be at least 8 characters long.",
+        timeout=5000,
+    )
+
+
+@pytest.mark.e2e
+def test_login_rejects_wrong_password(
+    page,
+    fastapi_server,
+):
+    """
+    Test that login rejects an incorrect password.
+    """
+    unique_id = uuid.uuid4().hex[:8]
+
+    username = f"wrongpass{unique_id}"
+    email = f"wrongpass_{unique_id}@example.com"
+    password = "Password123"
+
+    page.goto(
+        "http://localhost:8000/register-page"
+    )
+
+    page.fill("#username", username)
+    page.fill("#email", email)
+    page.fill("#password", password)
+    page.fill("#confirm-password", password)
+
+    page.click('button:text("Register")')
+
+    expect(
+        page.locator("#message")
+    ).to_have_text(
+        "Registration successful!",
+        timeout=5000,
+    )
+
+    page.goto(
+        "http://localhost:8000/login-page"
+    )
+
+    page.fill("#email", email)
+    page.fill("#password", "WrongPassword123")
+
+    page.click('button:text("Login")')
+
+    expect(
+        page.locator("#message")
+    ).to_have_text(
+        "Invalid email or password",
+        timeout=5000,
+    )
