@@ -46,9 +46,14 @@ jobs:
      
      - name: Build image
        run: docker build -t app:test .
+
+     - name: Verify installed package versions
+       run: |
+        docker run --rm app:test pip show msgpack setuptools
+
      
      - name: Run Trivy vulnerability scanner
-       uses: aquasecurity/trivy-action@0.31.0
+       uses: aquasecurity/trivy-action@master
        with:
         image-ref: 'app:test'
         format: 'table'
