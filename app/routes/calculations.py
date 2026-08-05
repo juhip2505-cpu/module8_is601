@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Calculation
+from app.jwt_handler import get_current_user
+from app.models import Calculation, User
 from app.operations import calculate_result
 from app.schemas import (
     CalculationCreate,
@@ -24,6 +25,7 @@ router = APIRouter(
 def create_calculation(
     calculation: CalculationCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     result = calculate_result(
         calculation.a,
@@ -36,7 +38,7 @@ def create_calculation(
         b=calculation.b,
         type=calculation.type.value,
         result=result,
-        user_id=calculation.user_id,
+        user_id=current_user.id,
     )
 
     db.add(db_calculation)
@@ -52,8 +54,13 @@ def create_calculation(
 )
 def browse_calculations(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    return db.query(Calculation).all()
+    return (
+        db.query(Calculation)
+        .filter(Calculation.user_id == current_user.id)
+        .all()
+    )
 
 
 @router.get(
@@ -63,10 +70,14 @@ def browse_calculations(
 def read_calculation(
     calculation_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     calculation = (
         db.query(Calculation)
-        .filter(Calculation.id == calculation_id)
+        .filter(
+            Calculation.id == calculation_id,
+            Calculation.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -87,10 +98,14 @@ def update_calculation(
     calculation_id: int,
     update: CalculationUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     calculation = (
         db.query(Calculation)
-        .filter(Calculation.id == calculation_id)
+        .filter(
+            Calculation.id == calculation_id,
+            Calculation.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -103,8 +118,6 @@ def update_calculation(
     calculation.a = update.a
     calculation.b = update.b
     calculation.type = update.type.value
-    calculation.user_id = update.user_id
-
     calculation.result = calculate_result(
         update.a,
         update.b,
@@ -123,10 +136,14 @@ def update_calculation(
 def delete_calculation(
     calculation_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     calculation = (
         db.query(Calculation)
-        .filter(Calculation.id == calculation_id)
+        .filter(
+            Calculation.id == calculation_id,
+            Calculation.user_id == current_user.id,
+        )
         .first()
     )
 

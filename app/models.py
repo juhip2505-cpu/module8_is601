@@ -64,11 +64,11 @@ class Calculation(Base):
         Float,
         nullable=False,
     )
-    user_id: Mapped[int | None] = mapped_column(
+    user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
-        nullable=True,
+        nullable=False,
     )
 
-    user: Mapped["User | None"] = relationship(
+    user: Mapped["User"] = relationship(
         back_populates="calculations",
     )
