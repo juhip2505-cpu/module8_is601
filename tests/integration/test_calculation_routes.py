@@ -1,6 +1,6 @@
-def register_test_user(client):
-    response = client.post(
-        "/users/register",
+def register_and_login_test_user(client):
+    client.post(
+        "/register",
         json={
             "username": "calcuser",
             "email": "calc@example.com",
@@ -8,12 +8,25 @@ def register_test_user(client):
         },
     )
 
-    assert response.status_code == 201
-    return response.json()["id"]
+    login_response = client.post(
+        "/login",
+        json={
+            "email": "calc@example.com",
+            "password": "Password123",
+        },
+    )
+
+    assert login_response.status_code == 200
+
+    token = login_response.json()["access_token"]
+
+    return {
+        "Authorization": f"Bearer {token}"
+    }
 
 
 def test_create_calculation(client):
-    user_id = register_test_user(client)
+    headers = register_and_login_test_user(client)
 
     response = client.post(
         "/calculations",
@@ -21,8 +34,8 @@ def test_create_calculation(client):
             "a": 10,
             "b": 5,
             "type": "Add",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
     assert response.status_code == 201
@@ -33,11 +46,11 @@ def test_create_calculation(client):
     assert data["b"] == 5
     assert data["type"] == "Add"
     assert data["result"] == 15
-    assert data["user_id"] == user_id
+    assert data["user_id"] is not None
 
 
 def test_browse_calculations(client):
-    user_id = register_test_user(client)
+    headers = register_and_login_test_user(client)
 
     client.post(
         "/calculations",
@@ -45,11 +58,14 @@ def test_browse_calculations(client):
             "a": 8,
             "b": 2,
             "type": "Divide",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
-    response = client.get("/calculations")
+    response = client.get(
+        "/calculations",
+        headers=headers,
+    )
 
     assert response.status_code == 200
 
@@ -61,7 +77,7 @@ def test_browse_calculations(client):
 
 
 def test_read_calculation(client):
-    user_id = register_test_user(client)
+    headers = register_and_login_test_user(client)
 
     create_response = client.post(
         "/calculations",
@@ -69,14 +85,15 @@ def test_read_calculation(client):
             "a": 9,
             "b": 3,
             "type": "Multiply",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
     calculation_id = create_response.json()["id"]
 
     response = client.get(
-        f"/calculations/{calculation_id}"
+        f"/calculations/{calculation_id}",
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -88,7 +105,7 @@ def test_read_calculation(client):
 
 
 def test_update_calculation(client):
-    user_id = register_test_user(client)
+    headers = register_and_login_test_user(client)
 
     create_response = client.post(
         "/calculations",
@@ -96,8 +113,8 @@ def test_update_calculation(client):
             "a": 10,
             "b": 5,
             "type": "Add",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
     calculation_id = create_response.json()["id"]
@@ -108,8 +125,8 @@ def test_update_calculation(client):
             "a": 20,
             "b": 4,
             "type": "Multiply",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -123,7 +140,7 @@ def test_update_calculation(client):
 
 
 def test_delete_calculation(client):
-    user_id = register_test_user(client)
+    headers = register_and_login_test_user(client)
 
     create_response = client.post(
         "/calculations",
@@ -131,14 +148,15 @@ def test_delete_calculation(client):
             "a": 15,
             "b": 5,
             "type": "Sub",
-            "user_id": user_id,
         },
+        headers=headers,
     )
 
     calculation_id = create_response.json()["id"]
 
     delete_response = client.delete(
-        f"/calculations/{calculation_id}"
+        f"/calculations/{calculation_id}",
+        headers=headers,
     )
 
     assert delete_response.status_code == 200
@@ -147,7 +165,8 @@ def test_delete_calculation(client):
     }
 
     get_response = client.get(
-        f"/calculations/{calculation_id}"
+        f"/calculations/{calculation_id}",
+        headers=headers,
     )
 
     assert get_response.status_code == 404
@@ -158,7 +177,12 @@ def test_delete_calculation(client):
 
 
 def test_read_nonexistent_calculation(client):
-    response = client.get("/calculations/999")
+    headers = register_and_login_test_user(client)
+
+    response = client.get(
+        "/calculations/999",
+        headers=headers,
+    )
 
     assert response.status_code == 404
     assert (
@@ -168,14 +192,16 @@ def test_read_nonexistent_calculation(client):
 
 
 def test_update_nonexistent_calculation(client):
+    headers = register_and_login_test_user(client)
+
     response = client.put(
         "/calculations/999",
         json={
             "a": 2,
             "b": 3,
             "type": "Add",
-            "user_id": None,
         },
+        headers=headers,
     )
 
     assert response.status_code == 404
@@ -186,7 +212,12 @@ def test_update_nonexistent_calculation(client):
 
 
 def test_delete_nonexistent_calculation(client):
-    response = client.delete("/calculations/999")
+    headers = register_and_login_test_user(client)
+
+    response = client.delete(
+        "/calculations/999",
+        headers=headers,
+    )
 
     assert response.status_code == 404
     assert (
@@ -196,14 +227,16 @@ def test_delete_nonexistent_calculation(client):
 
 
 def test_divide_by_zero_is_rejected(client):
+    headers = register_and_login_test_user(client)
+
     response = client.post(
         "/calculations",
         json={
             "a": 10,
             "b": 0,
             "type": "Divide",
-            "user_id": None,
         },
+        headers=headers,
     )
 
     assert response.status_code == 400
@@ -211,15 +244,23 @@ def test_divide_by_zero_is_rejected(client):
 
 
 def test_invalid_calculation_type_is_rejected(client):
+    headers = register_and_login_test_user(client)
+
     response = client.post(
         "/calculations",
         json={
             "a": 10,
             "b": 5,
             "type": "Power",
-            "user_id": None,
         },
+        headers=headers,
     )
 
     assert response.status_code == 400
     assert "type" in response.json()["error"]
+
+
+def test_unauthorized_calculation_access(client):
+    response = client.get("/calculations")
+
+    assert response.status_code == 401

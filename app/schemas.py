@@ -37,6 +37,7 @@ class UserRead(BaseModel):
     username: str
     email: EmailStr
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
@@ -46,7 +47,6 @@ class CalculationCreate(BaseModel):
     a: float
     b: float
     type: CalculationType
-    user_id: int | None = None
 
     @model_validator(mode="after")
     def validate_division(self):
@@ -63,7 +63,6 @@ class CalculationUpdate(BaseModel):
     a: float
     b: float
     type: CalculationType
-    user_id: int | None = None
 
     @model_validator(mode="after")
     def validate_division(self):
@@ -84,4 +83,4 @@ class CalculationRead(BaseModel):
     b: float
     type: CalculationType
     result: float
-    user_id: int | None = None
+    user_id: int
